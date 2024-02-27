@@ -4,47 +4,41 @@
 
 #![warn(clippy::all, clippy::pedantic, missing_docs)]
 
-mod scanner;
+mod lexer;
 mod macros;
 
-use colored::Colorize;
+use crate::lexer::Token;
+use logos::Logos;
 use clap::Parser;
 use std::fs;
-use crate::scanner::{Scanner, ScannerError};
 
 #[derive(Parser, Debug)]
 #[command(about = "Interpreter of the Origami Definition Language")]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// The .origami file to interpret
-    input_file: String,
+  /// The .origami file to interpret
+  input_file: String,
 
-    /// The path to write the output to
-    #[arg(short, long)]
-    output: Option<String>,
+  /// The path to write the output to
+  #[arg(short, long)]
+  output: Option<String>,
 }
 
 fn main() {
-    let args = Args::parse();
+  let args = Args::parse();
 
-    // Read from file
-    let contents = fs::read_to_string(args.input_file)
-        .expect("Could not locate the input file.");
+  // Read from file
+  let contents = fs::read_to_string(args.input_file)
+    .expect("Could not locate the input file.");
 
-    run(&contents);
+  run(&contents);
 }
 
 fn run(source: &str) {
-    let mut scanner = Scanner::new(source);
-    let tokens = match scanner.scan_tokens() {
-        Ok(tokens) => tokens,
-        Err(error) => {
-            eprintln!("{}", scanner.format_error(error));
-            std::process::exit(1);
-        }
-    };
+  let scanner = Token::lexer(source);
 
-    tokens.iter().for_each(|t| {
-        println!("{:?}", t);
+  scanner //.filter_map(|op| op.ok())
+    .for_each(|token| {
+      println!("{:?}", token);
     });
 }

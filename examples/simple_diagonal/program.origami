@@ -1,1 +1,3 @@
-fold .b to .d
+--l: @fold --(.a .b) to --(.b .c)
+fold .a to .(.b .c 3/4)
+unfold --l ; Test
