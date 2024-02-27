@@ -7,6 +7,7 @@
 mod scanner;
 mod macros;
 
+use colored::Colorize;
 use clap::Parser;
 use std::fs;
 use crate::scanner::{Scanner, ScannerError};
@@ -34,11 +35,11 @@ fn main() {
 }
 
 fn run(source: &str) {
-    let scanner = Scanner::new(source);
+    let mut scanner = Scanner::new(source);
     let tokens = match scanner.scan_tokens() {
         Ok(tokens) => tokens,
         Err(error) => {
-            print_error(error);
+            eprintln!("{}", scanner.format_error(error));
             std::process::exit(1);
         }
     };
@@ -46,28 +47,4 @@ fn run(source: &str) {
     tokens.iter().for_each(|t| {
         println!("{:?}", t);
     });
-}
-
-fn print_error(err: ScannerError) {
-    use ansi_term::{Style, Colour::*};
-
-    eprintln!("{}: {}\n", Style::new().bold().paint("Error"), err);
-
-    match err {
-        ScannerError::UnexpectedToken(context) => {
-            let first: &str = &context.line[0..context.range.start];
-            let second: &str = &context.line[context.range.start..context.range.end];
-            let third: &str = &context.line[context.range.end..];
-
-            eprintln!("   {} | {}{}{}",
-                context.line_number,
-                Red.paint(first),
-                Red.underline().paint(second),
-                Red.paint(third)
-            );
-
-            eprintln!("       {}^ -- Here", " ".repeat(context.range.start));
-        },
-        _ => {},
-    }
 }
